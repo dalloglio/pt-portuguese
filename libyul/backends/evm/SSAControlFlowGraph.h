@@ -116,7 +116,7 @@ public:
 		std::list<Operation> operations;
 		std::variant<MainExit, Jump, ConditionalJump, JumpTable, FunctionReturn, Terminated> exit = MainExit{};
 		template<typename Callable>
-		void forEachExit(Callable&& _callable)
+		void forEachExit(Callable&& _callable) const
 		{
 			if (auto* jump = std::get_if<Jump>(&exit))
 				_callable(jump->target);
@@ -186,7 +186,7 @@ public:
 	}
 	ValueId newLiteral(u256 _value)
 	{
-		auto [it, inserted] = m_literals.emplace(std::make_pair(_value, SSACFG::ValueId{m_valueInfos.size()}));
+		auto [it, inserted] = m_literals.emplace(_value, SSACFG::ValueId{m_valueInfos.size()});
 		if (inserted)
 			m_valueInfos.emplace_back(LiteralValue{_value});
 		else
