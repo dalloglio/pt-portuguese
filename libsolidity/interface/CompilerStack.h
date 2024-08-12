@@ -536,6 +536,9 @@ private:
 	/// This will generate the JSON object and store it in the Contract object if it is not present yet.
 	Json ethdebug(Contract const& _contract) const;
 
+	/// @returns the ethdebug data of all types defined within the contract.
+	static Json ethdebugTypes(Contract const& _contract) ;
+
 	/// @returns the offset of the entry point of the given function into the list of assembly items
 	/// or zero if it is not found or does not exist.
 	size_t functionEntryPoint(

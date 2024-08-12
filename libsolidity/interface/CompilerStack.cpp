@@ -1105,9 +1105,31 @@ Json CompilerStack::ethdebug(Contract const& _contract) const
 	solUnimplementedAssert(!isExperimentalSolidity());
 	return _contract.ethdebug.init([&] {
 		Json result = Json::object();
-		result["not yet implemented"] = true;
+		result["types"] = ethdebugTypes(_contract);
 		return result;
 	});
+}
+
+Json CompilerStack::ethdebugTypes(Contract const& _contract)
+{
+	Json types = Json::object();
+	ContractDefinition const& contract = *_contract.contract;
+	for (auto const& _enum: contract.definedEnums())
+	{
+		solAssert(_enum->ethdebug().has_value());
+		types[_enum->name()] = *_enum->ethdebug();
+	}
+	for (auto const& _struct: contract.definedStructs())
+	{
+		solAssert(_struct->ethdebug().has_value());
+		types[_struct->name()] = *_struct->ethdebug();
+	}
+	for (auto const& _function: contract.definedFunctions())
+	{
+		solAssert(_function->ethdebug().has_value());
+		types[_function->name()] = *_function->ethdebug();
+	}
+	return types;
 }
 
 bytes CompilerStack::cborMetadata(std::string const& _contractName, bool _forIR) const
