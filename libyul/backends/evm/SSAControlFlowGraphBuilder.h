@@ -68,7 +68,6 @@ private:
 	SSACFG::ValueId readVariable(Scope::Variable const& _variable, SSACFG::BlockId _block);
 	SSACFG::ValueId readVariableRecursive(Scope::Variable const& _variable, SSACFG::BlockId _block);
 	SSACFG::ValueId addPhiOperands(Scope::Variable const& _variable, SSACFG::ValueId _phi);
-	SSACFG::ValueId tryRemoveTrivialPhi(SSACFG::ValueId _phi);
 	void writeVariable(Scope::Variable const& _variable, SSACFG::BlockId _block, SSACFG::ValueId _value);
 
 	SSACFG& m_graph;
@@ -78,8 +77,8 @@ private:
 	SSACFG::BlockId m_currentBlock;
 	SSACFG::BasicBlock& currentBlock() { return m_graph.block(m_currentBlock); }
 	Scope* m_scope = nullptr;
-	Scope::Function const& lookupFunction(YulString _name) const;
-	Scope::Variable const& lookupVariable(YulString _name) const;
+	Scope::Function const& lookupFunction(YulName _name) const;
+	Scope::Variable const& lookupVariable(YulName _name) const;
 
 	struct BlockInfo {
 		bool sealed = false;
@@ -121,10 +120,12 @@ private:
 		SSACFG::BlockId _nonZero,
 		SSACFG::BlockId _zero
 	);
+
 	void jump(
 		langutil::DebugData::ConstPtr _debugData,
 		SSACFG::BlockId _target
 	);
+
 	void tableJump(
 		langutil::DebugData::ConstPtr _debugData,
 		SSACFG::ValueId _value,

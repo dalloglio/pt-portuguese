@@ -20,7 +20,7 @@
 
 #include <libyul/AsmAnalysis.h>
 #include <libyul/AsmAnalysisInfo.h>
-#include <libyul/backends/evm/ControlFlowGraphBuilder.h>
+#include <libyul/backends/evm/SSAControlFlowGraphBuilder.h>
 #include <libyul/backends/evm/EthAssemblyAdapter.h>
 #include <libyul/backends/evm/EVMCodeTransform.h>
 #include <libyul/backends/evm/EVMDialect.h>
@@ -371,18 +371,23 @@ Json YulStack::astJson() const
 Json YulStack::cfgJson() const
 {
 	yulAssert(m_parserResult, "");
-	yulAssert(m_parserResult->code, "");
+	yulAssert(m_parserResult->hasCode(), "");
 	yulAssert(m_parserResult->analysisInfo, "");
 	// FIXME: we should not regenerate the cfg, but for now this is sufficient for testing purposes
 	auto exportCFGFromObject = [&](Object const& _object) -> Json {
 		// NOTE: The block Ids are reset for each object
-		YulControlFlowGraphExporter exporter{};
-		std::unique_ptr<CFG> cfg = ControlFlowGraphBuilder::build(
+		auto ssaCfg = SSAControlFlowGraphBuilder::build(
 			*_object.analysisInfo.get(),
 			languageToDialect(m_language, m_evmVersion),
-			*_object.code.get()
+			_object.code()->root()
 		);
-		return exporter(*cfg);
+		YulControlFlowGraphExporter exporter(*ssaCfg);
+		//std::unique_ptr<CFG> cfg = ControlFlowGraphBuilder::build(
+		//	*_object.analysisInfo.get(),
+		//	languageToDialect(m_language, m_evmVersion),
+		//	*_object.code.get()
+		//);
+		return exporter.run();
 	};
 
 	std::function<Json(std::vector<std::shared_ptr<ObjectNode>>)> exportCFGFromSubObjects;
@@ -391,7 +396,7 @@ Json YulStack::cfgJson() const
 		for (std::shared_ptr<ObjectNode> const& subObjectNode: _subObjects)
 			if (Object const* subObject = dynamic_cast<Object const*>(subObjectNode.get()))
 			{
-				subObjectsJson[subObject->name.str()] = exportCFGFromObject(*subObject);
+				subObjectsJson[subObject->name] = exportCFGFromObject(*subObject);
 				subObjectsJson["type"] = "subObject";
 				if (!subObject->subObjects.empty())
 					subObjectsJson["subObjects"] = exportCFGFromSubObjects(subObject->subObjects);
@@ -401,7 +406,7 @@ Json YulStack::cfgJson() const
 
 	Object const& object = *m_parserResult.get();
 	Json jsonObject = Json::object();
-	jsonObject[object.name.str()] = exportCFGFromObject(object);
+	jsonObject[object.name] = exportCFGFromObject(object);
 	jsonObject["type"] = "Object";
 	jsonObject["subObjects"] = exportCFGFromSubObjects(object.subObjects);
 	return jsonObject;

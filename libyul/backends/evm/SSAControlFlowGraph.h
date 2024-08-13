@@ -104,7 +104,6 @@ public:
 			ValueId value;
 			std::map<u256, BlockId> cases;
 			BlockId defaultCase;
-
 		};
 		struct FunctionReturn
 		{
@@ -219,7 +218,9 @@ public:
 	std::vector<std::reference_wrapper<Scope::Function const>> functions;
 	std::map<Scope::Function const*, FunctionInfo> functionInfos;
 
-	// Container for artificial calls generated for switch statements.
+	/// Container for artificial calls generated for switch statements.
+	/// Ghost calls are used for the equality comparisons of the switch condition ghost variable with
+	/// the switch case literals when transforming the control flow of a switch to a sequence of conditional jumps.
 	std::list<yul::FunctionCall> ghostCalls;
 };
 
