@@ -351,6 +351,7 @@ std::string YulStack::print(
 	yulAssert(m_parserResult, "");
 	yulAssert(m_parserResult->hasCode(), "");
 	return m_parserResult->toString(
+		languageToDialect(m_language, m_evmVersion),
 		m_debugInfoSelection,
 		_soliditySourceProvider
 	) + "\n";
@@ -361,7 +362,7 @@ Json YulStack::astJson() const
 	yulAssert(m_stackState >= Parsed);
 	yulAssert(m_parserResult, "");
 	yulAssert(m_parserResult->hasCode(), "");
-	return  m_parserResult->toJson();
+	return  m_parserResult->toJson(languageToDialect(m_language, m_evmVersion));
 }
 
 std::shared_ptr<Object> YulStack::parserResult() const
