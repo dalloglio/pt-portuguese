@@ -2146,7 +2146,7 @@ std::vector<std::tuple<VariableDeclaration const*, u256, unsigned>> ContractType
 	switch (_location)
 	{
 	case DataLocation::Storage:
-		location = VariableDeclaration::Location::Storage;
+		location = VariableDeclaration::Location::Unspecified;
 		break;
 	case DataLocation::Transient:
 		location = VariableDeclaration::Location::Transient;
