@@ -32,7 +32,45 @@
                 "irOptimized": "object \"object\" {
     code { { sstore(mload(0), 0) } }
 }
-"
+",
+                "yulCFGJson": {
+                    "object": {
+                        "blocks": [
+                            {
+                                "exit": {
+                                    "targets": [
+                                        "Block0"
+                                    ],
+                                    "type": "MainExit"
+                                },
+                                "id": "Block0",
+                                "instructions": [
+                                    {
+                                        "in": [
+                                            "0x00"
+                                        ],
+                                        "op": "mload",
+                                        "out": [
+                                            "v1"
+                                        ]
+                                    },
+                                    {
+                                        "in": [
+                                            "0x00",
+                                            "v1"
+                                        ],
+                                        "op": "sstore",
+                                        "out": []
+                                    }
+                                ],
+                                "type": "BuiltinCall"
+                            }
+                        ],
+                        "functions": {}
+                    },
+                    "subObjects": {},
+                    "type": "Object"
+                }
             }
         }
     },

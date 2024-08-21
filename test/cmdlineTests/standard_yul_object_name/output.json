@@ -66,7 +66,83 @@ sub_0: assembly {
         code { { revert(0, 0) } }
     }
 }
-"
+",
+                "yulCFGJson": {
+                    "NamedObject": {
+                        "blocks": [
+                            {
+                                "exit": {
+                                    "targets": [
+                                        "Block0"
+                                    ],
+                                    "type": "MainExit"
+                                },
+                                "id": "Block0",
+                                "instructions": [
+                                    {
+                                        "builtinArgs": [
+                                            "DataName"
+                                        ],
+                                        "in": [],
+                                        "op": "dataoffset",
+                                        "out": [
+                                            "v0"
+                                        ]
+                                    },
+                                    {
+                                        "in": [
+                                            "0x00",
+                                            "v0"
+                                        ],
+                                        "op": "add",
+                                        "out": [
+                                            "v2"
+                                        ]
+                                    },
+                                    {
+                                        "in": [
+                                            "0x00",
+                                            "v2"
+                                        ],
+                                        "op": "sstore",
+                                        "out": []
+                                    }
+                                ],
+                                "type": "BuiltinCall"
+                            }
+                        ],
+                        "functions": {}
+                    },
+                    "subObjects": {
+                        "OtherObject": {
+                            "blocks": [
+                                {
+                                    "exit": {
+                                        "targets": [
+                                            "Block0"
+                                        ],
+                                        "type": "Terminated"
+                                    },
+                                    "id": "Block0",
+                                    "instructions": [
+                                        {
+                                            "in": [
+                                                "0x00",
+                                                "0x00"
+                                            ],
+                                            "op": "revert",
+                                            "out": []
+                                        }
+                                    ],
+                                    "type": "BuiltinCall"
+                                }
+                            ],
+                            "functions": {}
+                        },
+                        "type": "subObject"
+                    },
+                    "type": "Object"
+                }
             }
         }
     },
