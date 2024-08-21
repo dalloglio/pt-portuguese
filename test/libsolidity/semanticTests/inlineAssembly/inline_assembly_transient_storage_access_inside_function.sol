@@ -8,7 +8,7 @@ contract C {
         uint256 off2;
         assembly {
             function f() -> o1 {
-                sstore(z.slot, 7)
+                tstore(z.slot, 7)
                 o1 := y.offset
             }
             off2 := f()
@@ -17,5 +17,8 @@ contract C {
         return z;
     }
 }
+// ====
+// EVMVersion: >=cancun
+// compileViaYul: false
 // ----
 // f() -> 7
