@@ -6,7 +6,7 @@ contract C {
     }
     function g() public returns (uint) {
         x = 0;
-        f();
+        this.f();
         return x;
     }
     function h() public returns (uint) {
