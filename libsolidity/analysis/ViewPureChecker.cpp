@@ -47,8 +47,6 @@ public:
 
 	void operator()(yul::Literal const&) {}
 	void operator()(yul::Identifier const&) {}
-	void operator()(yul::Builtin const&) {}
-	void operator()(yul::Verbatim const&) {}
 	void operator()(yul::ExpressionStatement const& _expr)
 	{
 		std::visit(*this, _expr.expression);
