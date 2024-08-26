@@ -115,7 +115,7 @@ public:
 		langutil::DebugData::ConstPtr debugData;
 		std::set<BlockId> entries;
 		std::set<ValueId> phis;
-		std::list<Operation> operations;
+		std::vector<Operation> operations;
 		std::variant<MainExit, Jump, ConditionalJump, JumpTable, FunctionReturn, Terminated> exit = MainExit{};
 		template<typename Callable>
 		void forEachExit(Callable&& _callable)
