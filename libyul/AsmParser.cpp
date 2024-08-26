@@ -788,7 +788,7 @@ NameWithDebugData Parser::parseNameWithDebugData()
 YulName Parser::expectAsmIdentifier()
 {
 	YulName name{currentLiteral()};
-	if (currentToken() == Token::Identifier && m_dialect.builtin(name.str()))
+	if (currentToken() == Token::Identifier && (m_dialect.builtin(name.str()) || m_dialect.verbatim(name.str())))
 		fatalParserError(5568_error, "Cannot use builtin function name \"" + name.str() + "\" as identifier name.");
 	// NOTE: We keep the expectation here to ensure the correct source location for the error above.
 	expectToken(Token::Identifier);
