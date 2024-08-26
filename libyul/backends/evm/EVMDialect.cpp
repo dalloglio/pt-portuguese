@@ -498,6 +498,6 @@ BuiltinFunctionForEVM const& EVMDialect::builtinFunction(BuiltinHandle const& ha
 BuiltinFunctionForEVM const& EVMDialect::verbatimFunction(VerbatimHandle const& handle) const
 {
 	auto it = m_verbatimFunctions.find(std::make_pair(handle.numArgs, handle.numRets));
-	yulAssert(it != m_verbatimFunctions.end());
+	yulAssert(it != m_verbatimFunctions.end(), fmt::format("Didn't find verbatim function with {} args and {} rets", handle.numArgs, handle.numRets));
 	return it->second;
 }
