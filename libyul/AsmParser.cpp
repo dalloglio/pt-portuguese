@@ -738,6 +738,11 @@ FunctionCall Parser::parseCall(std::variant<Literal, Identifier, Builtin, Verbat
 		},
 		[&](Verbatim& _verbatim) -> FunctionCall
 		{
+			isUnlimitedLiteralArgument = [f=m_dialect.verbatimFunction(_verbatim.handle)](size_t index) {
+				if (index < f.literalArguments.size())
+					return f.literalArgument(index).has_value();
+				return false;
+			};
 			FunctionCall ret;
 			ret.debugData = _verbatim.debugData;
 			ret.functionName = std::move(_verbatim);

@@ -75,27 +75,16 @@ struct MiniEVMInterpreter
 
 	u256 operator()(FunctionCall const& _funCall)
 	{
-		return std::visit(GenericVisitor{
-			[&](Builtin const& _builtin) {
-				auto const& function = m_dialect.builtinFunction(_builtin.handle);
-				yulAssert(function.instruction, "Expected EVM instruction.");
-				return eval(*function.instruction, _funCall.arguments);
-			},
-			[&](Verbatim const& _verbatim) {
-				auto const& function = m_dialect.verbatimFunction(_verbatim.handle);
-				yulAssert(function.instruction, "Expected EVM instruction.");
-				return eval(*function.instruction, _funCall.arguments);
-			},
-			[](Identifier const&) -> u256 { yulAssert(false, "Expected builtin function."); }
-		}, _funCall.functionName);
+		BuiltinFunctionForEVM const* fun = resolveBuiltinFunctionForEVM(_funCall.functionName, m_dialect);
+		yulAssert(fun, "Expected builtin function.");
+		yulAssert(fun->instruction, "Expected EVM instruction.");
+		return eval(*fun->instruction, _funCall.arguments);
 	}
 	u256 operator()(Literal const& _literal)
 	{
 		return _literal.value.value();
 	}
 	u256 operator()(Identifier const&) { yulAssert(false, ""); }
-	u256 operator()(Builtin const&) { yulAssert(false, ""); }
-	u256 operator()(Verbatim const&) { yulAssert(false, ""); }
 
 	EVMDialect const& m_dialect;
 };

@@ -150,12 +150,16 @@ NoOutputEVMDialect::NoOutputEVMDialect(EVMDialect const& _copyFrom):
 	}
 
 	m_verbatimFunctions = _copyFrom.verbatimFunctions();
-	for (auto &[numArgsRets, fun]: m_verbatimFunctions)
+	for (auto &entry: m_verbatimFunctions)
 	{
-		fun.generateCode = [numArgs=numArgsRets.first, numRets=numArgsRets.second](FunctionCall const&, AbstractAssembly& _assembly, BuiltinContext&)
+		auto numArgs = entry.first.first;
+		auto numRets = entry.first.second;
+		auto const& fun = entry.second;
+		entry.second.generateCode = [numArgs, numRets, fun](FunctionCall const&, AbstractAssembly& _assembly, BuiltinContext&)
 		{
 			for (size_t i = 0; i < numArgs; i++)
-				_assembly.appendInstruction(evmasm::Instruction::POP);
+				if(!fun.literalArgument(i))
+					_assembly.appendInstruction(evmasm::Instruction::POP);
 
 			for (size_t i = 0; i < numRets; i++)
 				_assembly.appendConstant(u256(0));
