@@ -150,7 +150,7 @@ NoOutputEVMDialect::NoOutputEVMDialect(EVMDialect const& _copyFrom):
 	}
 
 	m_verbatimFunctions = _copyFrom.verbatimFunctions();
-	for (auto &entry: m_verbatimFunctions)
+	for (auto& entry: m_verbatimFunctions)
 	{
 		auto numArgs = entry.first.first;
 		auto numRets = entry.first.second;
@@ -158,7 +158,7 @@ NoOutputEVMDialect::NoOutputEVMDialect(EVMDialect const& _copyFrom):
 		entry.second.generateCode = [numArgs, numRets, fun](FunctionCall const&, AbstractAssembly& _assembly, BuiltinContext&)
 		{
 			for (size_t i = 0; i < numArgs; i++)
-				if(!fun.literalArgument(i))
+				if (!fun.literalArgument(i))
 					_assembly.appendInstruction(evmasm::Instruction::POP);
 
 			for (size_t i = 0; i < numRets; i++)
