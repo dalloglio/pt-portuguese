@@ -126,11 +126,18 @@ Representation const& RepresentationFinder::findRepresentation(u256 const& _valu
 	if (m_cache.count(_value))
 		return m_cache.at(_value);
 
+	yulAssert(m_dialect.handles().not_);
+	yulAssert(m_dialect.handles().shl);
+	yulAssert(m_dialect.handles().exp);
+	yulAssert(m_dialect.handles().mul);
+	yulAssert(m_dialect.handles().add);
+	yulAssert(m_dialect.handles().sub);
+
 	Representation routine = represent(_value);
 
 	if (numberEncodingSize(~_value) < numberEncodingSize(_value))
 		// Negated is shorter to represent
-		routine = min(std::move(routine), represent(m_dialect.handles().not_, findRepresentation(~_value)));
+		routine = min(std::move(routine), represent(*m_dialect.handles().not_, findRepresentation(~_value)));
 
 	// Decompose value into a * 2**k + b where abs(b) << 2**k
 	for (unsigned bits = 255; bits > 8 && m_maxSteps > 0; --bits)
@@ -153,21 +160,21 @@ Representation const& RepresentationFinder::findRepresentation(u256 const& _valu
 			continue;
 		Representation newRoutine;
 		if (m_dialect.evmVersion().hasBitwiseShifting())
-			newRoutine = represent(m_dialect.handles().shl, represent(bits), findRepresentation(upperPart));
+			newRoutine = represent(*m_dialect.handles().shl, represent(bits), findRepresentation(upperPart));
 		else
 		{
-			newRoutine = represent(m_dialect.handles().exp, represent(2), represent(bits));
+			newRoutine = represent(*m_dialect.handles().exp, represent(2), represent(bits));
 			if (upperPart != 1)
-				newRoutine = represent(m_dialect.handles().mul, findRepresentation(upperPart), newRoutine);
+				newRoutine = represent(*m_dialect.handles().mul, findRepresentation(upperPart), newRoutine);
 		}
 
 		if (newRoutine.cost >= routine.cost)
 			continue;
 
 		if (lowerPart > 0)
-			newRoutine = represent(m_dialect.handles().add, newRoutine, findRepresentation(u256(abs(lowerPart))));
+			newRoutine = represent(*m_dialect.handles().add, newRoutine, findRepresentation(u256(abs(lowerPart))));
 		else if (lowerPart < 0)
-			newRoutine = represent(m_dialect.handles().sub, newRoutine, findRepresentation(u256(abs(lowerPart))));
+			newRoutine = represent(*m_dialect.handles().sub, newRoutine, findRepresentation(u256(abs(lowerPart))));
 
 		if (m_maxSteps > 0)
 			m_maxSteps--;
