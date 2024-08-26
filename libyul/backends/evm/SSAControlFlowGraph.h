@@ -147,9 +147,16 @@ public:
 private:
 	std::vector<BasicBlock> m_blocks;
 public:
-	struct LiteralValue { u256 value; };
-	struct VariableValue { SSACFG::BlockId definingBlock; };
+	struct LiteralValue {
+		langutil::DebugData::ConstPtr debugData;
+		u256 value;
+	};
+	struct VariableValue {
+		langutil::DebugData::ConstPtr debugData;
+		SSACFG::BlockId definingBlock;
+	};
 	struct PhiValue {
+		langutil::DebugData::ConstPtr debugData;
 		BlockId block;
 		std::vector<ValueId> arguments;
 	};
@@ -168,13 +175,15 @@ public:
 	ValueId newPhi(SSACFG::BlockId _definingBlock)
 	{
 		SSACFG::ValueId id { m_valueInfos.size() };
-		m_valueInfos.emplace_back(PhiValue{_definingBlock, {}});
+		auto block = m_blocks.at(_definingBlock);
+		m_valueInfos.emplace_back(PhiValue{debugDataOf(block), _definingBlock, {}});
 		return id;
 	}
 	ValueId newVariable(SSACFG::BlockId _definingBlock)
 	{
 		SSACFG::ValueId id { m_valueInfos.size() };
-		m_valueInfos.emplace_back(VariableValue{_definingBlock});
+		auto block = m_blocks.at(_definingBlock);
+		m_valueInfos.emplace_back(VariableValue{debugDataOf(block), _definingBlock});
 		return id;
 	}
 	ValueId unreachableValue()
@@ -186,11 +195,11 @@ public:
 		}
 		return *m_unreachableValue;
 	}
-	ValueId newLiteral(u256 _value)
+	ValueId newLiteral(langutil::DebugData::ConstPtr _debugData, u256 _value)
 	{
 		auto [it, inserted] = m_literals.emplace(std::make_pair(_value, SSACFG::ValueId{m_valueInfos.size()}));
 		if (inserted)
-			m_valueInfos.emplace_back(LiteralValue{_value});
+			m_valueInfos.emplace_back(LiteralValue{_debugData, _value});
 		else
 		{
 			yulAssert(_value == it->first);

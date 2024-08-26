@@ -251,7 +251,7 @@ void SSAControlFlowGraphBuilder::operator()(Switch const& _switch)
 					*builtin,
 					ghostCall
 				},
-				{m_graph.newLiteral(_case.value->value.value()), expression}
+				{m_graph.newLiteral(debugDataOf(_case), _case.value->value.value()), expression}
 			});
 			return outputValue;
 		};
@@ -404,7 +404,7 @@ SSACFG::ValueId SSAControlFlowGraphBuilder::operator()(Identifier const& _identi
 
 SSACFG::ValueId SSAControlFlowGraphBuilder::operator()(Literal const& _literal)
 {
-	return m_graph.newLiteral(_literal.value.value());
+	return m_graph.newLiteral(debugDataOf(currentBlock()), _literal.value.value());
 }
 
 void SSAControlFlowGraphBuilder::assign(std::vector<std::reference_wrapper<Scope::Variable const>> _variables, Expression const* _expression)
@@ -498,7 +498,7 @@ std::vector<SSACFG::ValueId> SSAControlFlowGraphBuilder::visitFunctionCall(Funct
 
 SSACFG::ValueId SSAControlFlowGraphBuilder::zero()
 {
-	return m_graph.newLiteral(0u);
+	return m_graph.newLiteral(debugDataOf(currentBlock()), 0u);
 }
 
 SSACFG::ValueId SSAControlFlowGraphBuilder::readVariable(Scope::Variable const& _variable, SSACFG::BlockId _block)
