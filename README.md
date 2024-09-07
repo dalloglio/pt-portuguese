@@ -18,9 +18,9 @@ Contribuições são bem-vindas! Veja abaixo como você pode ajudar:
 ### Passos para Contribuir
 
 1. Faça um _fork_ deste repositório.
-2. Crie uma nova _branch_ para sua contribuição: `git checkout -b minha-branch`.
-3. Faça as modificações necessárias e _commits_: `git commit -m 'Adiciona tradução do capítulo X'`.
-4. Envie suas alterações para o seu repositório: `git push origin minha-branch`.
+2. Crie uma nova _branch_ para sua contribuição: `git checkout -b translate-basic-index`.
+3. Faça as modificações necessárias e _commits_: `git commit -m 'Adiciona tradução da página index'`.
+4. Envie suas alterações para o seu repositório: `git push origin translate-basic-index`.
 5. Abra um _pull request_ detalhando sua contribuição.
 
 ## Estrutura do Repositório
