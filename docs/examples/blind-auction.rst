@@ -1,72 +1,72 @@
 .. index:: auction;blind, auction;open, blind auction, open auction
 
-*************
-Blind Auction
-*************
+***************
+Leilão às Cegas
+***************
 
-In this section, we will show how easy it is to create a completely blind
-auction contract on Ethereum.  We will start with an open auction where
-everyone can see the bids that are made and then extend this contract into a
-blind auction where it is not possible to see the actual bid until the bidding
-period ends.
+Nesta seção, mostraremos como é fácil criar um contrato de leilão
+completamente às cegas no Ethereum. Começaremos com um leilão aberto, onde
+todos podem ver os lances feitos, e então estenderemos esse contrato para um
+leilão às cegas, onde não é possível ver o lance real até que o período de
+lances termine.
 
 .. _simple_auction:
 
-Simple Open Auction
-===================
+Leilão Aberto Simpres
+========================
 
-The general idea of the following simple auction contract is that everyone can
-send their bids during a bidding period. The bids already include sending some compensation,
-e.g. Ether, in order to bind the bidders to their bid. If the highest bid is
-raised, the previous highest bidder gets their Ether back.  After the end of
-the bidding period, the contract has to be called manually for the beneficiary
-to receive their Ether - contracts cannot activate themselves.
+A ideia geral do seguinte contrato de leilão simples é que todos podem
+enviar seus lances durante um período de lances. Os lances já incluem o envio de uma compensação,
+por exemplo, Ether, para garantir o comprometimento dos licitantes com seus lances. Se um lance mais alto for
+feito, o licitante anterior com o maior lance recebe seu Ether de volta. Após o término do
+período de lances, o contrato deve ser chamado manualmente para que o beneficiário
+receba seu Ether - contratos não podem se ativar sozinhos.
 
 .. code-block:: solidity
 
     // SPDX-License-Identifier: GPL-3.0
     pragma solidity ^0.8.4;
     contract SimpleAuction {
-        // Parameters of the auction. Times are either
-        // absolute unix timestamps (seconds since 1970-01-01)
-        // or time periods in seconds.
+        // Parâmetros do leilão. Os tempos são definidos como
+        // timestamps absolutos em unix (segundos desde 01/01/1970)
+        // ou períodos de tempo em segundos.
         address payable public beneficiary;
         uint public auctionEndTime;
 
-        // Current state of the auction.
+        // Estado atual do leilão.
         address public highestBidder;
         uint public highestBid;
 
-        // Allowed withdrawals of previous bids
+        // Saques permitidos de lances anteriores
         mapping(address => uint) pendingReturns;
 
-        // Set to true at the end, disallows any change.
-        // By default initialized to `false`.
+        // Definido como `true` no final, não permite nenhuma alteração.
+        // Por padrão, é inicializado como `false`.
         bool ended;
 
-        // Events that will be emitted on changes.
+        // Eventos que serão emitidos em caso de alterações.
         event HighestBidIncreased(address bidder, uint amount);
         event AuctionEnded(address winner, uint amount);
 
-        // Errors that describe failures.
+        // Erros que descrevem falhas.
 
-        // The triple-slash comments are so-called natspec
-        // comments. They will be shown when the user
-        // is asked to confirm a transaction or
-        // when an error is displayed.
+        // Os comentários com três barras são conhecidos como comentários natspec
+        // Eles serão exibidos quando o usuário
+        // for solicitado a confirmar uma transação ou
+        // quando um erro for exibido.
 
-        /// The auction has already ended.
+        /// O leilão já terminou.
         error AuctionAlreadyEnded();
-        /// There is already a higher or equal bid.
+        /// Já existe um lance maior ou igual.
         error BidNotHighEnough(uint highestBid);
-        /// The auction has not ended yet.
+        /// O leilão ainda não terminou.
         error AuctionNotYetEnded();
-        /// The function auctionEnd has already been called.
+        /// A função `auctionEnd` já foi chamada.
         error AuctionEndAlreadyCalled();
 
-        /// Create a simple auction with `biddingTime`
-        /// seconds bidding time on behalf of the
-        /// beneficiary address `beneficiaryAddress`.
+        /// Cria um leilão simples com `biddingTime`
+        /// segundos de tempo de lance em nome do
+        /// endereço do beneficiário `beneficiaryAddress`.
         constructor(
             uint biddingTime,
             address payable beneficiaryAddress
@@ -75,36 +75,36 @@ to receive their Ether - contracts cannot activate themselves.
             auctionEndTime = block.timestamp + biddingTime;
         }
 
-        /// Bid on the auction with the value sent
-        /// together with this transaction.
-        /// The value will only be refunded if the
-        /// auction is not won.
+        /// Faça uma oferta no leilão com o valor enviado
+        /// junto com esta transação.
+        /// O valor será reembolsado apenas se o
+        /// leilão não for ganho.
         function bid() external payable {
-            // No arguments are necessary, all
-            // information is already part of
-            // the transaction. The keyword payable
-            // is required for the function to
-            // be able to receive Ether.
+            // Nenhum argumento é necessário, todas
+            // as informações já fazem parte da
+            // transação. A palavra-chave payable
+            // é necessária para que a função
+            // possa receber Ether.
 
-            // Revert the call if the bidding
-            // period is over.
+            // Reverte a chamada se o período de
+            // lances já tiver terminado.
             if (block.timestamp > auctionEndTime)
                 revert AuctionAlreadyEnded();
 
-            // If the bid is not higher, send the
-            // Ether back (the revert statement
-            // will revert all changes in this
-            // function execution including
-            // it having received the Ether).
+            // Se o lance não for maior, envie o
+            // Ether de volta (a instrução revert
+            // reverterá todas as alterações na
+            // execução desta função incluindo
+            // o recebimento do Ether).
             if (msg.value <= highestBid)
                 revert BidNotHighEnough(highestBid);
 
             if (highestBid != 0) {
-                // Sending back the Ether by simply using
-                // highestBidder.send(highestBid) is a security risk
-                // because it could execute an untrusted contract.
-                // It is always safer to let the recipients
-                // withdraw their Ether themselves.
+                // Enviar o Ether de volta simplesmente usando
+                // highestBidder.send(highestBid) é um risco de segurança,
+                // porque pode executar um contrato não confiável.
+                // É sempre mais seguro deixar que os destinatários
+                // retirem seu Ether por conta própria.
                 pendingReturns[highestBidder] += highestBid;
             }
             highestBidder = msg.sender;
@@ -112,20 +112,20 @@ to receive their Ether - contracts cannot activate themselves.
             emit HighestBidIncreased(msg.sender, msg.value);
         }
 
-        /// Withdraw a bid that was overbid.
+        /// Retire um lance que foi superado.
         function withdraw() external returns (bool) {
             uint amount = pendingReturns[msg.sender];
             if (amount > 0) {
-                // It is important to set this to zero because the recipient
-                // can call this function again as part of the receiving call
-                // before `send` returns.
+                // É importante definir isso para zero porque o destinatário
+                // pode chamar essa função novamente como parte da chamada de recebimento
+                // antes que o `send` retorne.
                 pendingReturns[msg.sender] = 0;
 
-                // msg.sender is not of type `address payable` and must be
-                // explicitly converted using `payable(msg.sender)` in order
-                // use the member function `send()`.
+                // msg.sender não é do tipo `address payable` e deve ser
+                // explicitamente convertidi usando `payable(msg.sender)` para poder
+                // usar a função membro `send()`.
                 if (!payable(msg.sender).send(amount)) {
-                    // No need to call throw here, just reset the amount owing
+                    // Não há necessidade de chamar throw aqui, basta redefinir o valor devido
                     pendingReturns[msg.sender] = amount;
                     return false;
                 }
@@ -133,66 +133,63 @@ to receive their Ether - contracts cannot activate themselves.
             return true;
         }
 
-        /// End the auction and send the highest bid
-        /// to the beneficiary.
+        /// Finaliza o leilão e envia o maior lance
+        /// para o beneficiário.
         function auctionEnd() external {
-            // It is a good guideline to structure functions that interact
-            // with other contracts (i.e. they call functions or send Ether)
-            // into three phases:
-            // 1. checking conditions
-            // 2. performing actions (potentially changing conditions)
-            // 3. interacting with other contracts
-            // If these phases are mixed up, the other contract could call
-            // back into the current contract and modify the state or cause
-            // effects (ether payout) to be performed multiple times.
-            // If functions called internally include interaction with external
-            // contracts, they also have to be considered interaction with
-            // external contracts.
+            // É uma boa diretriz estruturar funções que interagem
+            // com outros contratos (ou seja, que chamam funções ou enviam Ether)
+            // em três fases:
+            // 1. verificação de condições
+            // 2. execução de ações (potencialmente alternando condições)
+            // 3. interação com outros contratos
+            // Se essas fases misturadas, o outro contrato pode chamar
+            // de volta o contrato atual e modificar o estado ou causar
+            // efeitos (pagamento em Ether) a serem executados várias vezes.
+            // Se funções chamadas internamente incluírem interação com contratos
+            // externos, elas também devem ser consideradas interação com
+            // contratos externos.
 
-            // 1. Conditions
+            // 1. Condições
             if (block.timestamp < auctionEndTime)
                 revert AuctionNotYetEnded();
             if (ended)
                 revert AuctionEndAlreadyCalled();
 
-            // 2. Effects
+            // 2. Efeitos
             ended = true;
             emit AuctionEnded(highestBidder, highestBid);
 
-            // 3. Interaction
+            // 3. Interação
             beneficiary.transfer(highestBid);
         }
     }
 
-Blind Auction
-=============
+Leilão às Cegas
+===============
 
-The previous open auction is extended to a blind auction in the following. The
-advantage of a blind auction is that there is no time pressure towards the end
-of the bidding period. Creating a blind auction on a transparent computing
-platform might sound like a contradiction, but cryptography comes to the
-rescue.
+O leilão aberto anterior é estendido para um leilão às cegas a seguir. A
+vantagem de um leilão às cegas é que não há pressão de tempo no final do fim
+do período de lances. Criar um leilão às cegas em uma plataforma de computação
+transparente pode parecer uma contradição, mas a criptografia vem para ajudar a resolver 
+esse problema.
 
-During the **bidding period**, a bidder does not actually send their bid, but
-only a hashed version of it.  Since it is currently considered practically
-impossible to find two (sufficiently long) values whose hash values are equal,
-the bidder commits to the bid by that.  After the end of the bidding period,
-the bidders have to reveal their bids: They send their values unencrypted, and
-the contract checks that the hash value is the same as the one provided during
-the bidding period.
+Durante o **período de lances**, um participante não envia seu lance diretamente, mas
+apenas uma versão hasheada (codificada) dele. Como é considerado praticamente
+impossível encontrar dois valores (suficientemente longos) que gerem o msmo valor de hash,
+o participante se compromete ao lance dessa forma. Após o fim do período de lances, os participantes precisam revelar seus lances: Eles enviam seus valores de forma não criptografada, e
+o contrato verifica se o valor do hash é o mesmo fornecido durante
+o período de lances.
 
-Another challenge is how to make the auction **binding and blind** at the same
-time: The only way to prevent the bidder from just not sending the Ether after
-they won the auction is to make them send it together with the bid. Since value
-transfers cannot be blinded in Ethereum, anyone can see the value.
+Outro desafio é como tornar o leilão **vinculado e cego** ao mesmo
+tempo: A única maneira de prevenir que o participante simplesmente não envie o Ether após
+ganhar o leilão é para fazer com que ele envie junto com o lance. Como as transferências
+de valor não podem ser ocultadas no Ethereum, qualquer pessoa pode ver o valor enviado.
 
-The following contract solves this problem by accepting any value that is
-larger than the highest bid. Since this can of course only be checked during
-the reveal phase, some bids might be **invalid**, and this is on purpose (it
-even provides an explicit flag to place invalid bids with high-value
-transfers): Bidders can confuse competition by placing several high or low
-invalid bids.
-
+O contrato a seguir resolve esse problema aceitando qualquer valor que seja
+maior que o lance mais alto. Como isso só pode ser verificado durante
+a fase de revelação, alguns lances podem ser **inválidos**, e isso é intencional (o contrato
+até fornece um sinalizador explícito para realizar lances inválidos com transferências 
+de valor elevado): participantees poder confundir a concorrência fazendo vários lances autos ou baixos inválidos.
 
 .. code-block:: solidity
     :force:
@@ -215,26 +212,26 @@ invalid bids.
         address public highestBidder;
         uint public highestBid;
 
-        // Allowed withdrawals of previous bids
+        // Retiradas permitidas de lances anteriores
         mapping(address => uint) pendingReturns;
 
         event AuctionEnded(address winner, uint highestBid);
 
-        // Errors that describe failures.
+        // Erros que descrevem falhas.
 
-        /// The function has been called too early.
-        /// Try again at `time`.
+        /// A função foi chamada muito cedo.
+        /// Tente novamente em `time`.
         error TooEarly(uint time);
-        /// The function has been called too late.
-        /// It cannot be called after `time`.
+        /// A função foi chamada muito tarde.
+        /// Não pode ser chamado após `time`.
         error TooLate(uint time);
-        /// The function auctionEnd has already been called.
+        /// A função auctionEnd já foi chamada.
         error AuctionEndAlreadyCalled();
 
-        // Modifiers are a convenient way to validate inputs to
-        // functions. `onlyBefore` is applied to `bid` below:
-        // The new function body is the modifier's body where
-        // `_` is replaced by the old function body.
+        // Modificadores são uma forma conveniente de validar entradas para
+        // funções. `onlyBefore` é aplicado a `bid` abaixo:
+        // O novo corpo da função é o corpo do modificador onde
+        // `_` é substituído pelo corpo antigo da função.
         modifier onlyBefore(uint time) {
             if (block.timestamp >= time) revert TooLate(time);
             _;
@@ -254,15 +251,15 @@ invalid bids.
             revealEnd = biddingEnd + revealTime;
         }
 
-        /// Place a blinded bid with `blindedBid` =
+        /// Faça um lance oculto com `blindedBid` =
         /// keccak256(abi.encodePacked(value, fake, secret)).
-        /// The sent ether is only refunded if the bid is correctly
-        /// revealed in the revealing phase. The bid is valid if the
-        /// ether sent together with the bid is at least "value" and
-        /// "fake" is not true. Setting "fake" to true and sending
-        /// not the exact amount are ways to hide the real bid but
-        /// still make the required deposit. The same address can
-        /// place multiple bids.
+        /// O ether enviado só é reembolsado se o lance for corretamente
+        /// revelado na fase de revelação. O lance é valído se o
+        /// ether enviado junto com o lance é pelo menos "value" e
+        /// "fake" não for verdadeiro. Definir "fake" como verdadeiro e enviar
+        /// um valor diferente são maneiras de ocultar o lance real, mas
+        /// ainda assim fazer o depósito necessário. O mesmo endereço pode
+        /// colocar multiplos lances.
         function bid(bytes32 blindedBid)
             external
             payable
@@ -274,9 +271,9 @@ invalid bids.
             }));
         }
 
-        /// Reveal your blinded bids. You will get a refund for all
-        /// correctly blinded invalid bids and for all bids except for
-        /// the totally highest.
+        /// Revele seus lances ocultos. Você irá obter um reembolso para todos
+        /// os lances inválidos corretamente ocultos e para todos os lances, exceto pelo
+        /// maior de todos.
         function reveal(
             uint[] calldata values,
             bool[] calldata fakes,
@@ -297,8 +294,8 @@ invalid bids.
                 (uint value, bool fake, bytes32 secret) =
                         (values[i], fakes[i], secrets[i]);
                 if (bidToCheck.blindedBid != keccak256(abi.encodePacked(value, fake, secret))) {
-                    // Bid was not actually revealed.
-                    // Do not refund deposit.
+                    // O lance não foi realmente revelado
+                    // Não reembolsar o depósito.
                     continue;
                 }
                 refund += bidToCheck.deposit;
@@ -306,29 +303,29 @@ invalid bids.
                     if (placeBid(msg.sender, value))
                         refund -= value;
                 }
-                // Make it impossible for the sender to re-claim
-                // the same deposit.
+                // Tornar impossível para o remetente reivindicar
+                // o mesmo depósito novamente.
                 bidToCheck.blindedBid = bytes32(0);
             }
             payable(msg.sender).transfer(refund);
         }
 
-        /// Withdraw a bid that was overbid.
+        /// Retirar um lance que foi superado.
         function withdraw() external {
             uint amount = pendingReturns[msg.sender];
             if (amount > 0) {
-                // It is important to set this to zero because the recipient
-                // can call this function again as part of the receiving call
-                // before `transfer` returns (see the remark above about
-                // conditions -> effects -> interaction).
+                // É importante definir isso como zero por que o destinatário
+                // pode chamar essa função novamente como parte da chamada de recebimento
+                // antes que `transfer` retorne (veja a remark acima sobre
+                // condições -> efeitos -> interação).
                 pendingReturns[msg.sender] = 0;
 
                 payable(msg.sender).transfer(amount);
             }
         }
 
-        /// End the auction and send the highest bid
-        /// to the beneficiary.
+        /// Encerra o leilão e envia o maior lance
+        /// ao beneficiário.
         function auctionEnd()
             external
             onlyAfter(revealEnd)
@@ -339,9 +336,9 @@ invalid bids.
             beneficiary.transfer(highestBid);
         }
 
-        // This is an "internal" function which means that it
-        // can only be called from the contract itself (or from
-        // derived contracts).
+        // Essa é uma função "interna" o que significa que só
+        // pode ser chamada a partir do próprio contrato (ou a partir de
+        // contratos derivados).
         function placeBid(address bidder, uint value) internal
                 returns (bool success)
         {

@@ -1,26 +1,26 @@
 .. index:: purchase, remote purchase, escrow
 
 ********************
-Safe Remote Purchase
+Compra Remota Segura
 ********************
 
-Purchasing goods remotely currently requires multiple parties that need to trust each other.
-The simplest configuration involves a seller and a buyer. The buyer would like to receive
-an item from the seller and the seller would like to get some compensation, e.g. Ether,
-in return. The problematic part is the shipment here: There is no way to determine for
-sure that the item arrived at the buyer.
+A compra de bens remotamente atualmente requer múltiplas partes que precisam confiar umas nas outras.
+A configuração mais simples envolve um vendedor e um comprador. O comprador deseja receber
+um item do vendedor e o vendedor deseja receber alguma compensação, por exemplo, Ether,
+em troca. A parte problemática é o envio: não há uma mameira de determinar com
+certeza que o item chegou ao comprador.
 
-There are multiple ways to solve this problem, but all fall short in one or the other way.
-In the following example, both parties have to put twice the value of the item into the
-contract as escrow. As soon as this happened, the Ether will stay locked inside
-the contract until the buyer confirms that they received the item. After that,
-the buyer is returned the value (half of their deposit) and the seller gets three
-times the value (their deposit plus the value). The idea behind
-this is that both parties have an incentive to resolve the situation or otherwise
-their Ether is locked forever.
+Existem várias maneiras de resolver esse problema, mas todas apresentam alguma limitação.
+No exemplo a seguir, ambas as partes precisam depositar no contrato o dobro do valor do item
+como garantia. Assim que isso ocorre, o Ether permanece bloqueado no
+contrato até que o comprador confirme que recebeu o item. Depoi disso,
+o comprador recebe de volta o valor (metado do depósito) e o vendedor recebe três
+vezes o valor (seu depósito mais o valor do item). A ideia por trás
+disso é que ambas as partes têm um incentivo para resolver a situação, caso contrário,
+seus Ethers serão bloqueados para sempre.
 
-This contract of course does not solve the problem, but gives an overview of how
-you can use state machine-like constructs inside a contract.
+Esse contrato, é claro, não resolve totalmente o problema, mas fornece uma visão geral de como
+você pode usar construções semelhantes a uma máquina de estados dentro de um contrato.
 
 
 .. code-block:: solidity
@@ -33,7 +33,7 @@ you can use state machine-like constructs inside a contract.
         address payable public buyer;
 
         enum State { Created, Locked, Release, Inactive }
-        // The state variable has a default value of the first member, `State.created`
+        // A variável de estado tem um valor padrão do primeiro membro, `State.created`
         State public state;
 
         modifier condition(bool condition_) {
@@ -41,13 +41,13 @@ you can use state machine-like constructs inside a contract.
             _;
         }
 
-        /// Only the buyer can call this function.
+        /// Apenas o comprador pode chamar esta função.
         error OnlyBuyer();
-        /// Only the seller can call this function.
+        /// Apenas o vendedor pode chamar esta função.
         error OnlySeller();
-        /// The function cannot be called at the current state.
+        /// A função não pode ser chamada no estado atual.
         error InvalidState();
-        /// The provided value has to be even.
+        /// O valor fornecido deve ser par.
         error ValueNotEven();
 
         modifier onlyBuyer() {
@@ -73,9 +73,9 @@ you can use state machine-like constructs inside a contract.
         event ItemReceived();
         event SellerRefunded();
 
-        // Ensure that `msg.value` is an even number.
-        // Division will truncate if it is an odd number.
-        // Check via multiplication that it wasn't an odd number.
+        // Garanta que `msg.value` seja um número par.
+        // A divisão irá truncar se for um número impar.
+        // Verifica através da multiplicação que não era um número impar.
         constructor() payable {
             seller = payable(msg.sender);
             value = msg.value / 2;
@@ -83,9 +83,9 @@ you can use state machine-like constructs inside a contract.
                 revert ValueNotEven();
         }
 
-        /// Abort the purchase and reclaim the ether.
-        /// Can only be called by the seller before
-        /// the contract is locked.
+        /// Aborta a compra e recupera o ether.
+        /// Só pode ser chamado pelo vendedor antes
+        /// do contrato ser bloqueado.
         function abort()
             external
             onlySeller
@@ -93,17 +93,17 @@ you can use state machine-like constructs inside a contract.
         {
             emit Aborted();
             state = State.Inactive;
-            // We use transfer here directly. It is
-            // reentrancy-safe, because it is the
-            // last call in this function and we
-            // already changed the state.
+            // Usamos `transfer` aqui diretamente. É
+            // seguro contra reentrância, porque é a
+            // última chamada nesta função e
+            // já alteramos o estado.
             seller.transfer(address(this).balance);
         }
 
-        /// Confirm the purchase as buyer.
-        /// Transaction has to include `2 * value` ether.
-        /// The ether will be locked until confirmReceived
-        /// is called.
+        /// Confirma a compra como comprador.
+        /// A transação deve incluir `2 * value` ether.
+        /// O ether ficará bloquado até que a função `confirmReceived`
+        /// seja chamada.
         function confirmPurchase()
             external
             inState(State.Created)
@@ -115,33 +115,33 @@ you can use state machine-like constructs inside a contract.
             state = State.Locked;
         }
 
-        /// Confirm that you (the buyer) received the item.
-        /// This will release the locked ether.
+        /// Confirme que você (o comprador) recebeu o item.
+        /// Isso liberará o ether bloqueado.
         function confirmReceived()
             external
             onlyBuyer
             inState(State.Locked)
         {
             emit ItemReceived();
-            // It is important to change the state first because
-            // otherwise, the contracts called using `send` below
-            // can call in again here.
+            // É importante mudar o estado primeiro, porque
+            // caso contrário, os contratos chamados usando `send` abaixo
+            // podem chamar novamente aqui.
             state = State.Release;
 
             buyer.transfer(value);
         }
 
-        /// This function refunds the seller, i.e.
-        /// pays back the locked funds of the seller.
+        /// Essa função reembolsa o vendedor, ou seja,
+        /// devolve os fundos bloqueados do vendedor.
         function refundSeller()
             external
             onlySeller
             inState(State.Release)
         {
             emit SellerRefunded();
-            // It is important to change the state first because
-            // otherwise, the contracts called using `send` below
-            // can call in again here.
+            // É importante mudar o estado primeiro, porque
+            // caso contrário, os contratos chamados usando `send` abaixo
+            // podem chamar novamente aqui.
             state = State.Inactive;
 
             seller.transfer(3 * value);
